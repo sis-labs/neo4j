@@ -17,6 +17,10 @@ module Neo4j
           rels.first
         end
 
+        def as(node_var)
+          new_link(node_var)
+        end
+
         # Give ability to call `#find` on associations to get a scoped find
         # Doesn't pass through via `method_missing` because Enumerable has a `#find` method
         def find(*args)
@@ -39,6 +43,7 @@ module Neo4j
 
         # @return [Integer] number of nodes of this class
         def count(distinct = nil, target = nil)
+          return 0 if unpersisted_start_object?
           fail(Neo4j::InvalidParameterError, ':count accepts `distinct` or nil as a parameter') unless distinct.nil? || distinct == :distinct
           query_with_target(target) do |var|
             q = distinct.nil? ? var : "DISTINCT #{var}"
@@ -61,6 +66,7 @@ module Neo4j
         end
 
         def empty?(target = nil)
+          return true if unpersisted_start_object?
           query_with_target(target) { |var| !self.exists?(nil, var) }
         end
 
